@@ -100,7 +100,7 @@ def check(line):
     return True
 
 def check_rows(board):
-    #checks all thre rows in a board
+    #checks all the rows in a board
     lines = [board[line_num,:] for line_num in range(9)]
     checks = [check(line) for line in lines]
     return not False in checks
