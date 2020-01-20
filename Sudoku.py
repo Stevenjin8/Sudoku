@@ -252,4 +252,4 @@ render(board_turtle)
 draw_nums(sdk)
 
 #solves
-print(solve(sdk))
+print(solve2(sdk))
