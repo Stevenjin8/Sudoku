@@ -1,15 +1,16 @@
 import numpy as np
+import time
 from turtle import Turtle, Screen
 
 #notes that [y,x] is used instead of [x,y] because the first dimension indicates height
 
-n = 4
+n = 3
 n2 = n**2
 
 #turtle setup
 board_turtle = Turtle()
 board_turtle.ht()
-#make a 9x9 matrix of turtles each to draw at their corresponding position
+#make a n^2xn^2 matrix of turtles each to draw at their corresponding position
 #so it is easier to clear
 turtles = [[Turtle() for _ in range(n2)] for _ in range(n2)]
 screen = Screen()
@@ -100,7 +101,7 @@ def check(line):
     return True
 
 def check_rows(board):
-    #checks all the rows in a board
+    #checks all thre rows in a board
     lines = [board[line_num,:] for line_num in range(9)]
     checks = [check(line) for line in lines]
     return not False in checks
@@ -122,7 +123,7 @@ def check_quads(board):
 
 def check_all(board):
     #checks the whole board
-    return check_quads(board) and check_rows(board) and check_cols(board)
+    return check_rows(board) and check_cols(board) and check_quads(board)
 
 def stuck(board):
     #checks if the board is stuck ie the first blank cannot hold 1-9
@@ -143,12 +144,12 @@ def can_go(num, x, y, board):
         return check_all(board)
 
 def can_go_tensor(board):
-    #returns an 9x9x9 (y,x,n) tensor of booleans where position (y,x,n) indicates whether
+    #returns an n^2xn^2xn^2 (y,x,n) tensor of booleans where position (y,x,n) indicates whether
     #value n can go in position (y,x) in the board
     out = np.zeros([n2,n2,n2])
     for x in range(0,n2):
         for y in range(0,n2):
-            #note that the array position correspond to numerical value -1
+            #note that the array position correspond to numerical value has to be transformed by -1
             out[x,y,:] = np.array([can_go(num,x,y, board.copy()) for num in range(1,n2+1)])
     return out
 
@@ -195,7 +196,7 @@ def fill(board):
 
 def solve(board):
     #sovles using only backtracking
-    if not (solved(board) or stuck(board.copy())):
+    if not solved(board) or stuck(board.copy()):
         first_zero = (np.where(board == 0)[0][0], np.where(board == 0)[1][0])
         
         for i in range(1,n2+1):
@@ -225,31 +226,19 @@ def solve2(board):
                 
     return board
 
+#this is the "world's hardest sudoku" by Arto Inkala
+sdk = np.array([ #zeros represent blank spaces
+       [8, 0, 0, 0, 0, 0, 0, 0, 0],
+       [0, 0, 3, 6, 0, 0, 0, 0, 0],
+       [0, 7, 0, 0, 9, 0, 2, 0, 0],
+       [0, 5, 0, 0, 0, 7, 0, 0, 0],
+       [0, 0, 0, 0, 4, 5, 7, 0, 0],
+       [0, 0, 0, 1, 0, 0, 0, 3, 0],
+       [0, 0, 1, 0, 0, 0, 0, 6, 8],
+       [0, 0, 8, 5, 0, 0, 0, 1, 0],
+       [0, 9, 0, 0, 0, 0, 4, 0, 0]
+       ])
 
-"""sdk = np.array([ #zeros represent blank spaces
-       [1, 0, 0, 0, 0, 0, 0, 9, 5],
-       [0, 9, 0, 0, 0, 0, 0, 0, 0],
-       [0, 0, 7, 0, 0, 0, 0, 0, 8],
-       [7, 0, 6, 0, 0, 3, 0, 0, 0],
-       [0, 3, 0, 0, 0, 0, 0, 2, 0],
-       [0, 0, 0, 5, 6, 0, 7, 0, 3],
-       [9, 2, 0, 0, 3, 0, 6, 0, 0],
-       [0, 0, 0, 8, 0, 2, 0, 5, 0],
-       [4, 0, 0, 0, 0, 1, 0, 0, 7]
-       ])"""
-"""#other possible puzzles
-sdk = np.array([
-    [1,0,0,0,0,0,0,0,0],
-    [0,0,3,6,0,0,0,0,0],
-    [0,7,0,5,9,0,2,0,0],
-    [0,0,0,0,0,7,1,0,0],
-    [0,0,0,0,0,5,7,0,0],
-    [0,0,0,1,0,6,0,3,0],
-    [0,0,1,0,0,0,0,6,8],
-    [0,0,8,5,0,0,0,0,0],
-    [0,9,0,0,0,0,4,0,0]])
-"""
-sdk = np.zeros((16,16))
 
 
 #so the ones that can't be changed say orange
@@ -263,4 +252,4 @@ render(board_turtle)
 draw_nums(sdk)
 
 #solves
-print(solve2(sdk))
+print(solve(sdk))
