@@ -1,17 +1,21 @@
+"""
+Script that solves a Sudoku puzzle quickly and efficiently with visualizations.
+"""
+
 import numpy as np
 import time
 from turtle import Turtle, Screen
 
-#notes that [y,x] is used instead of [x,y] because the first dimension indicates height
+# Note that [y,x] is used instead of [x,y] because the first dimension indicates height
 
 n = 3
 n2 = n**2
 
-#turtle setup
+# Turtle setup
 board_turtle = Turtle()
 board_turtle.ht()
-#make a n^2xn^2 matrix of turtles each to draw at their corresponding position
-#so it is easier to clear
+# Make an n^2xn^2 matrix of turtles each to draw at their corresponding position
+# so it is easier to clear
 turtles = [[Turtle() for _ in range(n2)] for _ in range(n2)]
 screen = Screen()
 
@@ -24,7 +28,18 @@ height = screen.window_height()-40
 width = screen.window_width()-40
 
 def render(t):
-    #draws the board
+    """
+    Renders the Sudoku board.
+    
+    Parameters
+    ----------
+    t : Turtle
+        The turtle that will draw the board.
+    
+    Returns
+    -------
+    None
+    """
     t.up()
     t.goto(-width//2, -height//2)
     t.down()
@@ -59,7 +74,22 @@ def render(t):
 
     
 def draw_digit(digit, x, y):
-    #clears and draws digit digit at position x,y on the board
+    """
+    Draws a digit at x, y on the board.
+    
+    Parameters
+    ----------
+    digit : int
+        The digit to draw.
+    x : int
+        The x coordinate.
+    y : int
+        The y coordinate.
+    
+    Returns
+    -------
+    None
+    """
     turtles[y][x].clear()
     
     if digit!= 0:
@@ -72,14 +102,34 @@ def draw_digit(digit, x, y):
         t.down()
     
 def draw_nums(board):
-    #draws all the numbers
+    """
+    Draws a Sudoku board.
+    
+    Parameters
+    ----------
+    board : np.ndarray
+    
+    Returns
+    -------
+    None
+    """
     for x in range(n2):
         for y in range(n2):
             draw_digit(board[y,x], x, y)
             
 
 def clear(board):
-    #clears digits that are now zero
+    """
+    Clears the 0 entries on the board.
+    
+    Parameters
+    ----------
+    board : np.ndarray
+    
+    Returns
+    -------
+    None
+    """
     for x in range(n2):
         for y in range(n2):
             if board[y,x] == 0:
@@ -87,11 +137,35 @@ def clear(board):
 
 
 def get_quad(board,x,y):
-    #returns an 1x9 ndarray of a quadrant
+    """
+    Gets a quadrant of the board.
+    
+    Parameters
+    ----------
+    board : np.ndarray
+    x : int
+        The x coordinate of the the quadrant
+    y : int 
+        The y coordinate of the the quadrant
+    
+    Returns
+    -------
+    np.ndarray
+    """
     return board[n*y:n*y+n,n*x:n*x+n]
 
 def check(line):
-    #checks if a line has only one of each digit
+    """
+    Verifies that digits in {1-9} occur at most once in `line`.
+    
+    Parameters
+    ----------
+    Line : np.ndarray
+    
+    Returns
+    -------
+    bool
+    """
     checked = []
     for x in line:
         if x != 0 and x in checked:
@@ -101,19 +175,49 @@ def check(line):
     return True
 
 def check_rows(board):
-    #checks all thre rows in a board
+    """
+    Checks that all the rows of the `board` are valid.
+    
+    Parameters
+    ----------
+    board : np.ndarray
+    
+    Returns
+    -------
+    bool
+    """
     lines = [board[line_num,:] for line_num in range(9)]
     checks = [check(line) for line in lines]
     return not False in checks
 
 def check_cols(board):
-    #checks all the columns in a board
+    """
+    Checks that all the columns of the `board` are valid.
+    
+    Parameters
+    ----------
+    board : np.ndarray
+    
+    Returns
+    -------
+    bool
+    """
     lines = [board[:,col_num].reshape(board[:,col_num].size) for col_num in range(9)]
     checks = [check(line) for line in lines]
     return not False in checks
 
 def check_quads(board):
-    #checks all the quadrants in a board
+    """
+    Checks that all quadrants of the `board` are valid.
+    
+    Parameters
+    ----------
+    board : np.ndarray
+    
+    Returns
+    -------
+    bool
+    """
     lines = []
     for x in range(n):
         for y in range(n):
@@ -122,11 +226,32 @@ def check_quads(board):
     return not False in checks
 
 def check_all(board):
-    #checks the whole board
+    """
+    Checks that all the `board` is valid.
+    
+    Parameters
+    ----------
+    board : np.ndarray
+    
+    Returns
+    -------
+    bool
+    """
     return check_rows(board) and check_cols(board) and check_quads(board)
 
 def stuck(board):
-    #checks if the board is stuck ie the first blank cannot hold 1-9
+    """
+    Checks that all the `board` is stuck (i.e. the first blank cannot hold
+    1-9.
+    
+    Parameters
+    ----------
+    board : np.ndarray
+
+    Returns
+    -------
+    bool
+    """
     first_zero = (np.where(board == 0)[0][0], np.where(board == 0)[1][0])
     for i in range(1,n2+1):
         board[first_zero[0],first_zero[1]] = i
@@ -135,7 +260,20 @@ def stuck(board):
     return True
 
 def can_go(num, x, y, board):
-    #checks if a number can go in a spot
+    """
+    Checks if `num` can go in position `x`, `y` on `board`.
+    
+    Parameters
+    ----------
+    num : int
+    x: int
+    y: int
+    board: np.ndarray
+    
+    Returns
+    -------
+    bool
+    """
     if board[x,y] != 0:
         return False
     else:
@@ -144,8 +282,17 @@ def can_go(num, x, y, board):
         return check_all(board)
 
 def can_go_tensor(board):
-    #returns an n^2xn^2xn^2 (y,x,n) tensor of booleans where position (y,x,n) indicates whether
-    #value n can go in position (y,x) in the board
+    """
+    Parameters
+    ----------
+    board : np.ndarray
+    
+    Returns
+    -------
+    out : np.ndarray
+        An n^2xn^2xn^2  tensor of booleans where position (y,x,n) indicates whether
+        value n can go in position (y,x) in the board
+    """
     out = np.zeros([n2,n2,n2])
     for x in range(0,n2):
         for y in range(0,n2):
@@ -154,30 +301,49 @@ def can_go_tensor(board):
     return out
 
 def solved(board):
-    #cehcks if the board has been solved
+    """
+    Checks if the board has been solved.
+    
+    Parameters
+    ----------
+    board: np.ndarray
+    
+    Returns
+    -------
+    bool
+    """
     return not 0 in board and check_all(board)
     
 def fill_once(board):
-    #fills in the board like one normally solves a sudoku puzzle
+    """
+    Fills in the board like one normally solves a sudoku puzzle.
     
-    #makes the tensor
+    Parameters
+    ----------
+    board : np.ndarray
+    
+    Returns
+    -------
+    board : np.ndarray
+    """
+    # Makes the tensor
     cgt = can_go_tensor(board.copy())
     
-    #checks if there are blocks where only one number can go
+    # Check if there are spots where only one number can go.
     for x in range(n2):
         for y in range(n2):
             if np.sum(cgt[x,y,:]) == 1:
-                board[x,y] = np.where(cgt[x,y,:])[0][0] + 1 #plus one beucase index 0 corresponds to value 1
+                board[x,y] = np.where(cgt[x,y,:])[0][0] + 1 # because index 0 corresponds to value 1
                 draw_digit(np.where(cgt[x,y,:])[0][0] + 1,y,x)
                 
-    #checks if a value num can only be in one position in a column
+    # Check if `num` can only be in one position in a column.
     for x in range(n2):
         for num in range(n2):
             if np.sum(cgt[:,x,num]) == 1:
                 board[np.where(cgt[:,x,num]),x] = num+ 1 #plus one beucase index 0 corresponds to value 1
                 draw_digit(num+1,x,np.where(cgt[:,x,num])[0][0])
                 
-    #checks if value num can only be in one postion in a column
+    # Check if `num` can only be in one postion in a column.
     for y in range(n2):
         for num in range(n2):
             if np.sum(cgt[y,:,num]) == 1:
@@ -187,7 +353,17 @@ def fill_once(board):
     return board
         
 def fill(board):
-    #fills the tradition way until backtracking is needed
+    """
+    Fill in a board the tradition way until backtracking is needed.
+    
+    Parameters
+    ----------
+    board : np.ndarray
+    
+    Returns
+    -------
+    board : np.ndarray
+    """
     new_board = fill_once(board.copy())
     while not np.array_equal(new_board, board):
         board = new_board.copy()
@@ -195,7 +371,17 @@ def fill(board):
     return board
 
 def solve(board):
-    #sovles using only backtracking
+    """
+    Fill in a board *only* using backtracking
+    
+    Parameters
+    ----------
+    board : np.ndarray
+    
+    Returns
+    -------
+    board : np.ndarray
+    """
     if not solved(board) or stuck(board.copy()):
         first_zero = (np.where(board == 0)[0][0], np.where(board == 0)[1][0])
         
@@ -212,7 +398,17 @@ def solve(board):
 
 
 def solve2(board):
-    #solves using a hybrid method
+    """
+    Fill in a board using backtracking and sudoku rules.
+    
+    Parameters
+    ----------
+    board : np.ndarray
+    
+    Returns
+    -------
+    board : np.ndarray
+    """
     if not (solved(board) or stuck(board.copy())):
         first_zero = (np.where(board == 0)[0][0], np.where(board == 0)[1][0])
         for i in range(1,n2+1):
@@ -250,13 +446,13 @@ sdk = np.array([ #zeros represent blank spaces
                 [0,1,0,0,0,0,0,9,0]])"""
 
 
-#so the ones that can't be changed say orange
+# So the ones that can't be changed say orange
 for x in range(n2):
     for y in range(n2):
         if sdk[y,x] != 0:
             turtles[y][x].pencolor('orange')
 
-#draws the board and starting numbers
+# Draw the board and starting numbers
 render(board_turtle)
 draw_nums(sdk)
 
